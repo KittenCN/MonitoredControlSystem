@@ -4,16 +4,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{C3872B18-43EC-455B-A8EF-4DA3FA9C1ED9}</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>MonitoredControlSystem</RootNamespace>
-    <AssemblyName>MonitoredControlSystem</AssemblyName>
+    <ProjectGuid>{9DB07B78-8A08-4C68-BBEE-26170EF91F4A}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ConsoleHelper</RootNamespace>
+    <AssemblyName>ConsoleHelper</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -23,7 +22,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -42,21 +40,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
+    <Compile Include="ConsoleHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\CollectionHelper\CollectionHelper.csproj">
-      <Project>{355f7511-2d1a-4867-9c05-6826c234c2c7}</Project>
-      <Name>CollectionHelper</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ConsoleHelper\ConsoleHelper.csproj">
-      <Project>{9db07b78-8a08-4c68-bbee-26170ef91f4a}</Project>
-      <Name>ConsoleHelper</Name>
-    </ProjectReference>
     <ProjectReference Include="..\MySqlHelper\MySqlHelper.csproj">
       <Project>{b0409613-1ba3-41c6-923b-a8272f4dfa58}</Project>
       <Name>MySqlHelper</Name>
