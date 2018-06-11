@@ -9,6 +9,7 @@ using System.Data;
 using System.Configuration;
 using System.Threading;
 using System.Web;
+using static ConsoleHelper.ConsoleHelper;
 
 namespace CollectionHelper
 {
@@ -40,7 +41,9 @@ namespace CollectionHelper
             }
             catch (Exception ex)
             {
-                throw ex;
+                //throw ex;
+                wl(url + "||Get Html Error! Error Info::" + ex.Message.ToString(), false, ConsoleColor.Red, ConsoleColor.Black);
+                return "-1";
             }
         }
         //url是要访问的网站地址，charSet是目标网页的编码，如果传入的是null或者""，那就自动分析网页的编码

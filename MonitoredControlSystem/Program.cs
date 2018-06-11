@@ -14,29 +14,41 @@ namespace MonitoredControlSystem
         public static ArrayList alOriHtml;
         public static ArrayList alKeyWords;
         public static string[] strUnUseExName = { ".js", ".png", ".gif", ".jpeg", "jpg", ".css" };
+        public static int intDeepth = 5;
         static void Main(string[] args)
         {
-            ArrayList alNextWebAdds = new ArrayList();
-            CollectionHelper.CollectionHelper ch = new CollectionHelper.CollectionHelper();
             alOriWebAdd = new ArrayList();
             alOriHtml = new ArrayList();
             alKeyWords = new ArrayList();
-            alOriWebAdd.Add("https://longint.org");
-            alKeyWords.Add("赛");
-            alOriHtml.Add(ch.gethtml(alOriWebAdd[0].ToString(), "utf-8"));
-            int intAddNum = ch.GetHyperLinks(alOriHtml[0].ToString()).Count;
+            alOriWebAdd.Add("http://club.tgfcer.com/");
+            alKeyWords.Add("游戏");
+            //alOriHtml.Add(ch.gethtml(alOriWebAdd[0].ToString(), "utf-8"));
+            MainProcess(alOriWebAdd[0].ToString(), intDeepth, true);
+            wl("all clear!", false);
+            Console.ReadLine();
+        }
+        private static void MainProcess(string strOriAdd, int intCurrentDeepth = 0, Boolean boolFirstRun = false)
+        {                       
+            if(boolFirstRun)
+            {
+                ProcessWeb(strOriAdd);
+            }
+            CollectionHelper.CollectionHelper ch = new CollectionHelper.CollectionHelper();
+            string strOri = ch.gethtml(strOriAdd);
+            ArrayList alNextWebAdds = new ArrayList();
+            int intAddNum = ch.GetHyperLinks(strOri).Count;
             if (intAddNum > 0)
             {
-                foreach (string strWebadd in ch.GetHyperLinks(alOriHtml[0].ToString()))
+                foreach (string strWebadd in ch.GetHyperLinks(strOri))
                 {
                     alNextWebAdds.Add(strWebadd.ToString());
                 }
             }
-            if (ch.getstr("\"/", "\"", alOriHtml[0].ToString()).Count > 0)
+            if (ch.getstr("\"/", "\"", strOri).Count > 0)
             {
-                foreach (string strWebadd in ch.getstr("\"/", "\"", alOriHtml[0].ToString()))
+                foreach (string strWebadd in ch.getstr("\"/", "\"", strOri))
                 {
-                    alNextWebAdds.Add("https://longint.org/" + strWebadd.ToString());
+                    alNextWebAdds.Add(strOriAdd + strWebadd.ToString());
                 }
             }
             if (alNextWebAdds.Count > 0)
@@ -68,20 +80,23 @@ namespace MonitoredControlSystem
                                 if (intCurrentStrNWAIndex < strNextWebAdds.Count())
                                 {
                                     strNextWebAdds[intCurrentStrNWAIndex] = strNextWebAdd;
-                                    string strHtml = ch.gethtml(strNextWebAdd);
-                                    int intKeyNum = strHtml.IndexOf(alKeyWords[0].ToString());
-                                    if (intKeyNum > 0)
-                                    {
-                                        wl(strNextWebAdd + "||" + intKeyNum.ToString(), false);
-                                    }
+                                    ProcessWeb(strNextWebAdd);
                                     intCurrentStrNWAIndex++;
+                                    intCurrentDeepth++;
+                                    if(intCurrentDeepth <= 5)
+                                    {
+                                        MainProcess(strNextWebAdd, intCurrentDeepth);
+                                    }
+                                    else
+                                    {
+                                        intCurrentDeepth = 0;
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-            Console.ReadLine();
         }
         private static Boolean CheckStringList(string[] OriStrs, string Oristr)
         {
@@ -95,6 +110,16 @@ namespace MonitoredControlSystem
                 }
             }
             return boolResult;
+        }
+        private static void ProcessWeb(string strWebAdd)
+        {
+            CollectionHelper.CollectionHelper ch = new CollectionHelper.CollectionHelper();
+            string strHtml = ch.gethtml(strWebAdd);
+            int intKeyNum = strHtml.IndexOf(alKeyWords[0].ToString());
+            if (intKeyNum > 0 || 1==1)
+            {
+                wl(strWebAdd + "||" + intKeyNum.ToString(), false);
+            }
         }
     }
 }

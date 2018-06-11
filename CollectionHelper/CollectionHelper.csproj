@@ -44,5 +44,11 @@
     <Compile Include="CollectionHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ConsoleHelper\ConsoleHelper.csproj">
+      <Project>{9db07b78-8a08-4c68-bbee-26170ef91f4a}</Project>
+      <Name>ConsoleHelper</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
