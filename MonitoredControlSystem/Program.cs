@@ -3,97 +3,252 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 using System.Collections;
 using static ConsoleHelper.ConsoleHelper;
+using static CollectionHelper.CollectionHelper;
 
 namespace MonitoredControlSystem
 {
     class Program
     {
+        public static ArrayList alCheckAdds;
         public static ArrayList alOriWebAdd;
         public static ArrayList alOriHtml;
         public static ArrayList alKeyWords;
-        public static string[] strUnUseExName = { ".js", ".png", ".gif", ".jpeg", "jpg", ".css" };
-        public static int intDeepth = 5;
+        public static ArrayList alAllWebAdds;
+        public static ArrayList alAllWebAddsDeepth;
+        public static ArrayList alAllShowAdds;
+        public static ArrayList alShowAdds;
+        public static string[] strUnUseExName = { ".js", ".png", ".gif", ".jpeg", ".jpg", ".css", ".ico", ".pdf", ".zip", ".rar", ".iso", ".wma", ".wmv", ".mp3", ".flac", ".ape", ".mp4", ".mp3", ".apk", ".exe", ".bin", ".swf", ".avi", ".flv", ".doc", ".docx" };
+        //public static int intDeepth = 3;
+        public static Boolean boolCrossWeb = false;
+        public static string strOriWebAdd;
+        public static int intAllAddress = 0;
+        public static DateTime dtBegin = DateTime.Now;
+        public static Thread tdBase;
+        public static Thread tdChild;
+        public static int intAllValidNode = 0;
         static void Main(string[] args)
         {
+            //CHinit();
             alOriWebAdd = new ArrayList();
             alOriHtml = new ArrayList();
             alKeyWords = new ArrayList();
-            alOriWebAdd.Add("http://club.tgfcer.com/");
-            alKeyWords.Add("游戏");
+            alOriWebAdd.Add("https://longint.org/");
+            alKeyWords.Add("奶牛");
             //alOriHtml.Add(ch.gethtml(alOriWebAdd[0].ToString(), "utf-8"));
-            MainProcess(alOriWebAdd[0].ToString(), intDeepth, true);
-            wl("all clear!", false);
+            MainProcess(alOriWebAdd[0].ToString(), 0, true);
+            tdBase = new Thread(() => MainProcess(alOriWebAdd[0].ToString(), 0, true));
+            tdBase.Priority = ThreadPriority.Highest;
+            tdBase.Start();
+            Thread.Sleep(500);
+            //Thread tdProtect = new Thread(() => ProtectProcess());
+            //tdProtect.Start();
+            while (tdBase.ThreadState != ThreadState.Running && tdChild.ThreadState != ThreadState.Running)
+            {
+                ShowProcess(alAllShowAdds);
+                //    if(alAllShowAdds.Count > 30)
+                //    {
+                //        int intSeed = alAllShowAdds.Count / 3;
+                //        ArrayList al = new ArrayList();
+                //        for(int i = 0; i < intSeed; i++)
+                //        {
+                //            al.Add(alAllShowAdds[i]);
+                //        }
+                //        Thread tdProtect1 = new Thread(() => ShowProcess(al));
+                //        tdProtect1.Start();
+                //        al = new ArrayList();
+                //        for (int i = intSeed; i < intSeed + intSeed; i++)
+                //        {
+                //            al.Add(alAllShowAdds[i]);
+                //        }
+                //        Thread tdProtect2 = new Thread(() => ShowProcess(al));
+                //        tdProtect2.Start();
+                //        al = new ArrayList();
+                //        for (int i = intSeed + intSeed; i < alAllShowAdds.Count; i++)
+                //        {
+                //            al.Add(alAllShowAdds[i]);
+                //        }
+                //        Thread tdProtect3 = new Thread(() => ShowProcess(al));
+                //        tdProtect3.Start();
+                //    }
+                //    else
+                //    {
+                //        ShowProcess(alAllShowAdds);
+                //    }
+                //    wl("all clear! Total Time is :" + (DateTime.Now - dtBegin).ToString() + " Total Node Num is :" + intAllAddress.ToString() + " Total Valid Node Num is " + intAllValidNode.ToString(), false);
+                //    break;
+            }
             Console.ReadLine();
         }
-        private static void MainProcess(string strOriAdd, int intCurrentDeepth = 0, Boolean boolFirstRun = false)
-        {                       
-            if(boolFirstRun)
+        private static void ProtectProcess()
+        {
+            while (tdBase.ThreadState != ThreadState.Running && tdChild.ThreadState != ThreadState.Running)
             {
-                ProcessWeb(strOriAdd);
+                ShowProcess(alAllShowAdds);
+                wl("all clear! Total Time is :" + (DateTime.Now - dtBegin).ToString() + " Total Node Num is :" + intAllAddress.ToString() + " Total Valid Node Num is " + intAllValidNode.ToString(), false);
+                Console.ReadLine();
+                break;
+            }            
+        }
+        private static void MainProcess(string strOriAdd, int intIndex = 0, Boolean boolFirstRun = false, int intDeepth = 3)
+        {
+            if (boolFirstRun)
+            {
+                //wl("Init..", false, ConsoleColor.Yellow, ConsoleColor.Black);
+                alAllWebAdds = new ArrayList();
+                alShowAdds = new ArrayList();
+                alCheckAdds = new ArrayList();
+                alAllWebAddsDeepth = new ArrayList();
+                alAllShowAdds = new ArrayList();
+                alAllWebAdds.Add(strOriAdd);
+                alAllWebAddsDeepth.Add(intIndex.ToString());
+                //ProcessWeb(strOriAdd);
+                boolFirstRun = false;
+                strOriWebAdd = strOriAdd;
             }
-            CollectionHelper.CollectionHelper ch = new CollectionHelper.CollectionHelper();
-            string strOri = ch.gethtml(strOriAdd);
-            ArrayList alNextWebAdds = new ArrayList();
-            int intAddNum = ch.GetHyperLinks(strOri).Count;
-            if (intAddNum > 0)
+            else
             {
-                foreach (string strWebadd in ch.GetHyperLinks(strOri))
+                try
                 {
-                    alNextWebAdds.Add(strWebadd.ToString());
-                }
-            }
-            if (ch.getstr("\"/", "\"", strOri).Count > 0)
-            {
-                foreach (string strWebadd in ch.getstr("\"/", "\"", strOri))
-                {
-                    alNextWebAdds.Add(strOriAdd + strWebadd.ToString());
-                }
-            }
-            if (alNextWebAdds.Count > 0)
-            {
-                string[] strNextWebAdds = new string[alNextWebAdds.Count];
-                int intCurrentStrNWAIndex = 0;
-                foreach (string strNextWebAdd in alNextWebAdds)
-                {
-                    char charCheck = strNextWebAdd.Substring(strNextWebAdd.Length - 1, 1).ToCharArray()[0];
-                    if (char.IsLetterOrDigit(charCheck) || charCheck == '/')
+                    if (alAllWebAdds.IndexOf(strOriAdd) >= 0)
                     {
-                        string strExName = System.IO.Path.GetExtension(strNextWebAdd);
-                        if (!CheckStringList(strUnUseExName, strExName))
+                        intIndex = int.Parse(alAllWebAddsDeepth[alAllWebAdds.IndexOf(strOriAdd)].ToString());
+                    }
+                }
+                catch
+                { }
+                intIndex++;
+            }
+            //wl("Process Node:" + strOriAdd + "||Deepth is " + intIndex.ToString(), false, ConsoleColor.Yellow, ConsoleColor.Black);
+            CollectionHelper.CollectionHelper ch = new CollectionHelper.CollectionHelper();
+            string strBaseWeb = ch.getstr("://", "/", strOriAdd)[0].ToString();
+            int intErrNum = 0;
+            REBACK:
+            string strOri = ch.gethtml(strOriAdd, "utf-8", intErrNum);
+            if (strOri.Substring(0, 2) != "-1" && strOri.Substring(0, 2) != "-2")
+            {
+                ArrayList alNextWebAdds = new ArrayList();
+                int intAddNum = ch.GetHyperLinks(strOri).Count;
+                if (intAddNum > 0)
+                {
+                    //wl("Child Node Process 1", false);
+                    foreach (string strWebadd in ch.GetHyperLinks(strOri))
+                    {
+                        string strSeed = strWebadd;
+                        if (!boolCrossWeb)
                         {
-                            Boolean boolWebCheck = false;
-                            if (strNextWebAdds[0] != null)
+                            if (strSeed.Substring(strSeed.Length - 1, 1) != "/")
                             {
-                                foreach (string strNextWebAddCheck in strNextWebAdds)
-                                {
-                                    if (strNextWebAdd == strNextWebAddCheck)
-                                    {
-                                        boolWebCheck = true;
-                                        break;
-                                    }
-                                }
+                                strSeed = strWebadd + "/";
                             }
-                            if (!boolWebCheck)
+                            string strCroseeWebSeed = ch.getstr("://", "/", strSeed)[0].ToString();
+                            if (strBaseWeb == strCroseeWebSeed)
                             {
-                                if (intCurrentStrNWAIndex < strNextWebAdds.Count())
+                                if (alAllWebAdds.IndexOf(strSeed.ToString()) < 0)
                                 {
-                                    strNextWebAdds[intCurrentStrNWAIndex] = strNextWebAdd;
-                                    ProcessWeb(strNextWebAdd);
-                                    intCurrentStrNWAIndex++;
-                                    intCurrentDeepth++;
-                                    if(intCurrentDeepth <= 5)
-                                    {
-                                        MainProcess(strNextWebAdd, intCurrentDeepth);
-                                    }
-                                    else
-                                    {
-                                        intCurrentDeepth = 0;
-                                    }
+                                    alNextWebAdds.Add(strSeed.ToString());
+                                    alAllWebAdds.Add(strSeed.ToString());
+                                    alAllWebAddsDeepth.Add(intIndex);
+                                    intAllAddress++;
                                 }
                             }
                         }
+                        else
+                        {
+                            if (alAllWebAdds.IndexOf(strSeed.ToString()) < 0)
+                            {
+                                alNextWebAdds.Add(strSeed.ToString());
+                                alAllWebAdds.Add(strSeed.ToString());
+                                alAllWebAddsDeepth.Add(intIndex);
+                                intAllAddress++;
+                            }
+                        }
+                    }
+                }
+                //wl("Child Node Process 2", false);
+                if (ch.getstr("\"/", "\"", strOri).Count > 0)
+                {
+                    foreach (string strWebadd in ch.getstr("\"/", "\"", strOri))
+                    {
+                        if (alAllWebAdds.IndexOf(strOriWebAdd + strWebadd.ToString()) < 0)
+                        {
+                            alNextWebAdds.Add(strOriWebAdd + strWebadd.ToString());
+                            alAllWebAdds.Add(strOriWebAdd + strWebadd.ToString());
+                            alAllWebAddsDeepth.Add(intIndex);
+                            intAllAddress++;
+                        }
+                    }
+                }
+                //wl("Current Node have " + alNextWebAdds.Count.ToString() + " Child Nodes, Deepth is " + (intIndex + 1).ToString(), false);
+                if (alNextWebAdds.Count > 0)
+                {
+                    foreach (string strNextWebAdd in alNextWebAdds)
+                    {
+                        char charCheck = strNextWebAdd.Substring(strNextWebAdd.Length - 1, 1).ToCharArray()[0];
+                        if ((char.IsLetterOrDigit(charCheck) || charCheck == '/') && (charCheck != ':'))
+                        {
+                            try
+                            {
+                                string strExName = System.IO.Path.GetExtension(strNextWebAdd);
+                                if (!CheckStringList(strUnUseExName, strExName))
+                                {
+                                    if (intIndex <= intDeepth)
+                                    {
+                                        wl_Thread("Add New Node:" + strNextWebAdd + "||Deepth is " + intIndex.ToString(), false, ConsoleColor.Yellow, ConsoleColor.Black);
+                                        alAllShowAdds.Add(strNextWebAdd);
+                                        //MainProcess(strNextWebAdd, intIndex, false);
+                                        if (intIndex < intDeepth)
+                                        {
+                                            tdChild = new Thread(() => MainProcess(strNextWebAdd, intIndex, false));                                       
+                                            tdChild.Start();
+                                            Thread.Sleep(3000);
+                                        }
+                                    }
+                                    else if (intIndex > intDeepth)
+                                    {
+                                        return;
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                //alCheckAdds.Add(strNextWebAdd);
+                                //wl(strNextWebAdd + "::" + ex.Message.ToString(), false, ConsoleColor.Red, ConsoleColor.Black);                             
+                            }
+                        }
+                    }
+                }
+            }
+            else if(strOri.Substring(0, 2) == "-2")
+            {
+                //wl("Current Node has no data", false);
+                intErrNum = int.Parse(strOri.Substring(strOri.Length - 1, 1));
+                goto REBACK;
+            }
+        }
+        private static void ShowProcess(ArrayList alAdds)
+        {
+            if (alAdds != null && alAdds.Count > 0)
+            {
+                for (int i = 0; i < alAdds.Count; i++)
+                {
+                    string strSeed = alAdds[i].ToString();
+                    Boolean boolSeedCheck = false;
+                    if (alCheckAdds.IndexOf(strSeed) >= 0 && alShowAdds.IndexOf(strSeed) >= 0)
+                    {
+                        boolSeedCheck = true;
+                        break;
+                    }
+                    if (!boolSeedCheck)
+                    {
+                        int intIndex = 0;
+                        if (alAllWebAdds.IndexOf(strSeed) >= 0)
+                        {
+                            intIndex = int.Parse(alAllWebAddsDeepth[alAllWebAdds.IndexOf(strSeed)].ToString());
+                        }
+                        ProcessWeb(strSeed.ToString(), intIndex);
                     }
                 }
             }
@@ -103,7 +258,7 @@ namespace MonitoredControlSystem
             Boolean boolResult = false;
             foreach (string str in OriStrs)
             {
-                if (str == Oristr)
+                if (str.ToLower() == Oristr.ToLower())
                 {
                     boolResult = true;
                     break;
@@ -111,14 +266,22 @@ namespace MonitoredControlSystem
             }
             return boolResult;
         }
-        private static void ProcessWeb(string strWebAdd)
+        private static void ProcessWeb(string strWebAdd, int intindex)
         {
             CollectionHelper.CollectionHelper ch = new CollectionHelper.CollectionHelper();
             string strHtml = ch.gethtml(strWebAdd);
             int intKeyNum = strHtml.IndexOf(alKeyWords[0].ToString());
-            if (intKeyNum > 0 || 1==1)
+            if (intKeyNum > 0)
             {
-                wl(strWebAdd + "||" + intKeyNum.ToString(), false);
+                alShowAdds.Add(strWebAdd);
+                alCheckAdds.Add(strWebAdd);
+                intAllValidNode++;
+                wl(strWebAdd + "||Deepth :" + intindex.ToString() + " First Position : " + intKeyNum.ToString(), false);
+            }
+            else
+            {
+                alCheckAdds.Add(strWebAdd);
+                //wl(strWebAdd + "||" + intKeyNum.ToString(), false, ConsoleColor.Yellow, ConsoleColor.Black);
             }
         }
     }

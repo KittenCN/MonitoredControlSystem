@@ -15,11 +15,15 @@ namespace ConsoleHelper
         public static Boolean boolLog = true;
         public static void wl(string strValues)
         {
+            Console.ForegroundColor = ccDefColor;
+            Console.BackgroundColor = ccDefBackColer;
             Console.WriteLine(strValues);
             Log(strValues);
         }
         public static void wl(string strValues, Boolean boolLogFlag)
         {
+            Console.ForegroundColor = ccDefColor;
+            Console.BackgroundColor = ccDefBackColer;
             Console.WriteLine(strValues);
             if (boolLogFlag == true)
             {
@@ -33,6 +37,16 @@ namespace ConsoleHelper
             Console.WriteLine(strValues);
             Console.ForegroundColor = ccDefColor;
             Console.BackgroundColor = ccDefBackColer;
+            if (boolLogFlag == true)
+            {
+                Log(strValues);
+            }
+        }
+        public static void wl_Thread(string strValues, Boolean boolLogFlag, ConsoleColor cc, ConsoleColor bcc)
+        {
+            Console.ForegroundColor = cc;
+            Console.BackgroundColor = bcc;
+            Console.WriteLine(strValues);
             if (boolLogFlag == true)
             {
                 Log(strValues);
@@ -56,6 +70,8 @@ namespace ConsoleHelper
         }
         public static void wrr(string strValues, Boolean boolFlag)
         {
+            Console.ForegroundColor = ccDefColor;
+            Console.BackgroundColor = ccDefBackColer;
             boolLog = boolFlag;
             Console.Write("\r" + strValues);
             Log(strValues);

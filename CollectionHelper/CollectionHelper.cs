@@ -9,12 +9,17 @@ using System.Data;
 using System.Configuration;
 using System.Threading;
 using System.Web;
+using System.Threading;
 using static ConsoleHelper.ConsoleHelper;
 
 namespace CollectionHelper
 {
     public class CollectionHelper
     {
+        public static void CHinit()
+        {
+            
+        }
         #region 获取网页内容
         /// <summary>
         /// 获取网页内容
@@ -22,7 +27,7 @@ namespace CollectionHelper
         /// <param name="url">网址</param>
         /// <param name="code">网页编码例如GB2312</param>
         /// <returns>网页源码</returns>
-        public string gethtml(string url, string code = "utf-8")
+        public string gethtml(string url, string code = "utf-8", int intErrNum = 0)
         {
             string strResult;
             try
@@ -42,8 +47,16 @@ namespace CollectionHelper
             catch (Exception ex)
             {
                 //throw ex;
-                wl(url + "||Get Html Error! Error Info::" + ex.Message.ToString(), false, ConsoleColor.Red, ConsoleColor.Black);
-                return "-1";
+                //alCheckAdds.Add(url);
+                //wl(url + "::" + ex.Message.ToString(), false, ConsoleColor.Red, ConsoleColor.Black);
+                if(intErrNum <= 3)
+                {
+                    return "-2:" + intErrNum.ToString();
+                }
+                else
+                {
+                    return "-1";
+                }                
             }
         }
         //url是要访问的网站地址，charSet是目标网页的编码，如果传入的是null或者""，那就自动分析网页的编码
