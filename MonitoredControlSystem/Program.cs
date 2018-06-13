@@ -28,7 +28,9 @@ namespace MonitoredControlSystem
         public static DateTime dtBegin = DateTime.Now;
         public static Thread tdBase;
         public static Thread tdChild;
+        public static Thread tdPW;
         public static int intAllValidNode = 0;
+        public static int intThreadNum = 0;
         static void Main(string[] args)
         {
             //CHinit();
@@ -40,46 +42,15 @@ namespace MonitoredControlSystem
             //alOriHtml.Add(ch.gethtml(alOriWebAdd[0].ToString(), "utf-8"));
             MainProcess(alOriWebAdd[0].ToString(), 0, true);
             tdBase = new Thread(() => MainProcess(alOriWebAdd[0].ToString(), 0, true));
-            tdBase.Priority = ThreadPriority.Highest;
             tdBase.Start();
-            Thread.Sleep(500);
             //Thread tdProtect = new Thread(() => ProtectProcess());
             //tdProtect.Start();
-            while (tdBase.ThreadState != ThreadState.Running && tdChild.ThreadState != ThreadState.Running)
+            while (tdBase.ThreadState != ThreadState.Stopped || tdChild.ThreadState != ThreadState.Stopped || tdPW.ThreadState != ThreadState.Stopped)
             {
-                ShowProcess(alAllShowAdds);
-                //    if(alAllShowAdds.Count > 30)
-                //    {
-                //        int intSeed = alAllShowAdds.Count / 3;
-                //        ArrayList al = new ArrayList();
-                //        for(int i = 0; i < intSeed; i++)
-                //        {
-                //            al.Add(alAllShowAdds[i]);
-                //        }
-                //        Thread tdProtect1 = new Thread(() => ShowProcess(al));
-                //        tdProtect1.Start();
-                //        al = new ArrayList();
-                //        for (int i = intSeed; i < intSeed + intSeed; i++)
-                //        {
-                //            al.Add(alAllShowAdds[i]);
-                //        }
-                //        Thread tdProtect2 = new Thread(() => ShowProcess(al));
-                //        tdProtect2.Start();
-                //        al = new ArrayList();
-                //        for (int i = intSeed + intSeed; i < alAllShowAdds.Count; i++)
-                //        {
-                //            al.Add(alAllShowAdds[i]);
-                //        }
-                //        Thread tdProtect3 = new Thread(() => ShowProcess(al));
-                //        tdProtect3.Start();
-                //    }
-                //    else
-                //    {
-                //        ShowProcess(alAllShowAdds);
-                //    }
-                //    wl("all clear! Total Time is :" + (DateTime.Now - dtBegin).ToString() + " Total Node Num is :" + intAllAddress.ToString() + " Total Valid Node Num is " + intAllValidNode.ToString(), false);
-                //    break;
+                //Thread.Sleep(500);
             }
+            ShowProcess(alAllShowAdds);
+            wl("all clear! Total Time is :" + (DateTime.Now - dtBegin).ToString() + " Total Node Num is :" + intAllAddress.ToString() + " Total Valid Node Num is " + intAllValidNode.ToString(), false);
             Console.ReadLine();
         }
         private static void ProtectProcess()
@@ -90,9 +61,9 @@ namespace MonitoredControlSystem
                 wl("all clear! Total Time is :" + (DateTime.Now - dtBegin).ToString() + " Total Node Num is :" + intAllAddress.ToString() + " Total Valid Node Num is " + intAllValidNode.ToString(), false);
                 Console.ReadLine();
                 break;
-            }            
+            }
         }
-        private static void MainProcess(string strOriAdd, int intIndex = 0, Boolean boolFirstRun = false, int intDeepth = 3)
+        private static void MainProcess(string strOriAdd, int intIndex = 0, Boolean boolFirstRun = false, Boolean boolChildThreadFlag = false, int intDeepth = 5, int intThreadLimit = 30)
         {
             if (boolFirstRun)
             {
@@ -127,6 +98,8 @@ namespace MonitoredControlSystem
             int intErrNum = 0;
             REBACK:
             string strOri = ch.gethtml(strOriAdd, "utf-8", intErrNum);
+            tdPW = new Thread(() => ProcessWeb(strOriAdd, intDeepth));
+            tdPW.Start();
             if (strOri.Substring(0, 2) != "-1" && strOri.Substring(0, 2) != "-2")
             {
                 ArrayList alNextWebAdds = new ArrayList();
@@ -199,11 +172,27 @@ namespace MonitoredControlSystem
                                         wl_Thread("Add New Node:" + strNextWebAdd + "||Deepth is " + intIndex.ToString(), false, ConsoleColor.Yellow, ConsoleColor.Black);
                                         alAllShowAdds.Add(strNextWebAdd);
                                         //MainProcess(strNextWebAdd, intIndex, false);
-                                        if (intIndex < intDeepth)
+                                        if (intThreadNum >= intThreadLimit)
                                         {
-                                            tdChild = new Thread(() => MainProcess(strNextWebAdd, intIndex, false));                                       
-                                            tdChild.Start();
-                                            Thread.Sleep(3000);
+                                            //tdChild.Join();
+                                            MainProcess(strNextWebAdd, intIndex, false);
+                                        }
+                                        if (intThreadNum < intThreadLimit && intIndex <= intDeepth)
+                                        {
+                                            try
+                                            {
+                                                tdChild = new Thread(() => MainProcess(strNextWebAdd, intIndex, false, true));                                                
+                                                intThreadNum++;
+                                                wl("Create New Thread:" + intThreadNum, false, ConsoleColor.Yellow, ConsoleColor.Black);
+                                                tdChild.Start();
+                                                //tdChild.Join();
+                                                //Thread.Sleep(500);
+                                            }
+                                            catch
+                                            {
+                                                intThreadNum--;
+                                                wl("Destroy Old Thread:" + intThreadNum, false, ConsoleColor.Yellow, ConsoleColor.Black);
+                                            }
                                         }
                                     }
                                     else if (intIndex > intDeepth)
@@ -214,6 +203,7 @@ namespace MonitoredControlSystem
                             }
                             catch (Exception ex)
                             {
+                                //intThreadNum--;
                                 //alCheckAdds.Add(strNextWebAdd);
                                 //wl(strNextWebAdd + "::" + ex.Message.ToString(), false, ConsoleColor.Red, ConsoleColor.Black);                             
                             }
@@ -221,11 +211,16 @@ namespace MonitoredControlSystem
                     }
                 }
             }
-            else if(strOri.Substring(0, 2) == "-2")
+            else if (strOri.Substring(0, 2) == "-2")
             {
                 //wl("Current Node has no data", false);
                 intErrNum = int.Parse(strOri.Substring(strOri.Length - 1, 1));
                 goto REBACK;
+            }
+            if(boolChildThreadFlag)
+            {
+                intThreadNum--;
+                wl("Destroy Old Thread:" + intThreadNum, false, ConsoleColor.Yellow, ConsoleColor.Black);
             }
         }
         private static void ShowProcess(ArrayList alAdds)
@@ -266,7 +261,7 @@ namespace MonitoredControlSystem
             }
             return boolResult;
         }
-        private static void ProcessWeb(string strWebAdd, int intindex)
+        private static void ProcessWeb(string strWebAdd, int intIndex)
         {
             CollectionHelper.CollectionHelper ch = new CollectionHelper.CollectionHelper();
             string strHtml = ch.gethtml(strWebAdd);
@@ -276,7 +271,7 @@ namespace MonitoredControlSystem
                 alShowAdds.Add(strWebAdd);
                 alCheckAdds.Add(strWebAdd);
                 intAllValidNode++;
-                wl(strWebAdd + "||Deepth :" + intindex.ToString() + " First Position : " + intKeyNum.ToString(), false);
+                wl(strWebAdd + "||Deepth :" + intIndex.ToString() + " First Position : " + intKeyNum.ToString(), false);
             }
             else
             {
