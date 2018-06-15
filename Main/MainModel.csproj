@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{C3872B18-43EC-455B-A8EF-4DA3FA9C1ED9}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <RootNamespace>MonitoredControlSystem</RootNamespace>
-    <AssemblyName>MonitoredControlSystem</AssemblyName>
+    <ProjectGuid>{90EF971E-D7F6-44DA-94B9-C88A125A3C18}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>MainModel</RootNamespace>
+    <AssemblyName>MainModel</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -31,9 +31,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
-  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -45,24 +42,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MonitoredControlSystem.cs" />
+    <Compile Include="MainModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\CollectionHelper\CollectionHelper.csproj">
-      <Project>{355f7511-2d1a-4867-9c05-6826c234c2c7}</Project>
-      <Name>CollectionHelper</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ConsoleHelper\ConsoleHelper.csproj">
-      <Project>{9db07b78-8a08-4c68-bbee-26170ef91f4a}</Project>
-      <Name>ConsoleHelper</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\MySqlHelper\MySqlHelper.csproj">
-      <Project>{b0409613-1ba3-41c6-923b-a8272f4dfa58}</Project>
-      <Name>MySqlHelper</Name>
+    <ProjectReference Include="..\MonitoredControlSystem\MonitoredControlSystem.csproj">
+      <Project>{c3872b18-43ec-455b-a8ef-4da3fa9c1ed9}</Project>
+      <Name>MonitoredControlSystem</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
