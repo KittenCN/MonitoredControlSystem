@@ -12,6 +12,11 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CollectionHelper", "CollectionHelper\CollectionHelper.csproj", "{355F7511-2D1A-4867-9C05-6826C234C2C7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MainModel", "Main\MainModel.csproj", "{90EF971E-D7F6-44DA-94B9-C88A125A3C18}"
+	ProjectSection(ProjectDependencies) = postProject
+		{355F7511-2D1A-4867-9C05-6826C234C2C7} = {355F7511-2D1A-4867-9C05-6826C234C2C7}
+		{B0409613-1BA3-41C6-923B-A8272F4DFA58} = {B0409613-1BA3-41C6-923B-A8272F4DFA58}
+		{9DB07B78-8A08-4C68-BBEE-26170EF91F4A} = {9DB07B78-8A08-4C68-BBEE-26170EF91F4A}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

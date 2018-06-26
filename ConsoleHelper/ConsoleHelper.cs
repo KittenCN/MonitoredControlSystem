@@ -11,7 +11,7 @@ namespace ConsoleHelper
     {
         public static ConsoleColor ccDefColor = ConsoleColor.Green;
         public static ConsoleColor ccDefBackColer = ConsoleColor.Black;
-        public static string GenLinkString = "Server=localhost;user id=root;password=;Database=chenkuserdb37;Port=3308;charset=utf8;";
+        //public static string GenLinkString = "Server=localhost;user id=root;password=1q2w3e;Database=mcs;Port=3306;charset=utf8;";
         public static Boolean boolLog = true;
         public static void wl(string strValues)
         {
@@ -68,7 +68,7 @@ namespace ConsoleHelper
             Console.BackgroundColor = ccDefBackColer;
             Log(strValues);
         }
-        public static void wrr(string strValues, Boolean boolFlag)
+        public static void wrr(string strValues, Boolean boolFlag = true)
         {
             Console.ForegroundColor = ccDefColor;
             Console.BackgroundColor = ccDefBackColer;
@@ -106,13 +106,13 @@ namespace ConsoleHelper
                     LogBody = LogBody.Replace("'", "#");
                     LogBody = LogBody.Replace("\"", "#");
                     string sql = "insert into Log(Log,LogDateTime) ";
-                    sql = sql + " values('" + LogBody + "',#" + DateTime.Now.ToString() + "#) ";
-                    int intInSql = MySqlHelper.MySqlHelper.ExecuteSql(sql, GenLinkString);
+                    sql = sql + " values('" + LogBody + "','" + DateTime.Now.ToString() + "'); ";
+                    int intInSql = MySqlHelper.MySqlHelper.ExecuteSql(sql, MySqlHelper.MySqlHelper.GenLinkString);
                 }
             }
-            catch
+            catch(Exception ex)
             {
-                wl("Error!Record Log Fail!!", false, ConsoleColor.Red, ConsoleColor.Black);
+                wl("Error!Record Log Fail!!::" + ex.Message.ToString(), false, ConsoleColor.Red, ConsoleColor.Black);
                 Console.Write("\r");
             }
         }

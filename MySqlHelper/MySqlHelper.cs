@@ -7,6 +7,7 @@ namespace MySqlHelper
     public class MySqlHelper
     {
         ///private static string connectionString = ConfigurationManager.ConnectionStrings["mysqlconn"].ConnectionString;
+        public static string GenLinkString = "Server=localhost;user id=root;password=1q2w3e;Database=mcs;Port=3306;charset=utf8;";
         /// <summary>
         /// 执行查询语句，返回DataSet
         /// </summary>

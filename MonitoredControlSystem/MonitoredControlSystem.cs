@@ -7,6 +7,8 @@ using System.Threading;
 using System.Collections;
 using static ConsoleHelper.ConsoleHelper;
 using static CollectionHelper.CollectionHelper;
+using static MySqlHelper.MySqlHelper;
+using System.Timers;
 
 namespace MonitoredControlSystem
 {
@@ -27,20 +29,36 @@ namespace MonitoredControlSystem
         public static int intAllAddress = 0;
         public static DateTime dtBegin = DateTime.Now;
         public static Thread tdBase;
-        public static Thread tdChild;
-        public static Thread tdPW;
+        public static Thread[] tdChild;
+        public static Thread[] tdPW;
         public static int intAllValidNode = 0;
         public static int intThreadNum = 0;
+        public static int intAllThreadNum = 0;
+        public static System.Timers.Timer aTimer;
+        public static int intTDMax = 0;
         static void Main(string[] args)
         {
-            Init();
+            alOriWebAdds = new ArrayList();
+            alOriHtml = new ArrayList();
+            alKeyWords = new ArrayList();
+            //---------------------------------
+            alKeyWords.Add("奶牛");
+            alKeyWords.Add("赛");
+            //---------------------------------
+            alOriWebAdds.Add(args[0].ToString());
+            try
+            {
+                Init(alOriWebAdds, alKeyWords, int.Parse(args[1]), int.Parse(args[2]));
+            }
+            catch
+            {
+                wl("Test Mode");
+                Init();
+            }
         }
         public static void Init(ArrayList alOW = null, ArrayList alKW = null, int intDeepth = 3, int intThreadLimit = 5)
         {
             //CHinit();
-            alOriWebAdds = new ArrayList();
-            alOriHtml = new ArrayList();
-            alKeyWords = new ArrayList();
             if (alOW == null || alOW.Count <= 0 ) { alOW = new ArrayList(); alOW.Add("https://longint.org/"); }
             if (alKW == null || alKW.Count <= 0) { alKW = new ArrayList(); alKW.Add("奶牛"); }
             //alOriHtml.Add(ch.gethtml(alOriWebAdd[0].ToString(), "utf-8"));
@@ -48,6 +66,9 @@ namespace MonitoredControlSystem
             {
                 alOriWebAdds = alOW;
                 alKeyWords = alKW;
+                aTimer = new System.Timers.Timer(30000);
+                aTimer.Elapsed += new ElapsedEventHandler(ShowTD);
+                aTimer.Enabled = true;
                 foreach (string strWebadd in alOriWebAdds)
                 {
                     //MainProcess(strWebadd.ToString(), 0, true, false, intDeepth, intThreadLimit);
@@ -60,32 +81,61 @@ namespace MonitoredControlSystem
                         }
                         if(booltdCheck) { break; }
                     }
-                    tdBase = new Thread(() =>  MainProcess(strWebadd.ToString(), 0, true, false, intDeepth, intThreadLimit));
+                    tdBase = new Thread(() =>  MainProcess(strWebadd.ToString(), 0, true, false, intDeepth, intThreadLimit,true));
                     tdBase.Start();
                     //tdBase.Join();
                     //Thread.Sleep(500);
                 }
             }
-            while (tdBase.ThreadState != ThreadState.Stopped || tdChild.ThreadState != ThreadState.Stopped || tdPW.ThreadState != ThreadState.Stopped)
+            tdBase.Join();
+            //while (tdBase.ThreadState != ThreadState.Stopped || tdChild.ThreadState != ThreadState.Stopped || tdPW.ThreadState != ThreadState.Stopped)
+            while (tdBase.ThreadState != ThreadState.Stopped || !CheckTD(tdChild) || !CheckTD(tdPW))
+
             {
                 //Thread.Sleep(500);
             }
             ShowProcess(alAllShowAdds);
-            wl("all clear! Total Time is :" + (DateTime.Now - dtBegin).ToString() + " Total Node Num is :" + intAllAddress.ToString() + " Total Valid Node Num is " + intAllValidNode.ToString(), false);
+            wl("all clear! Total Time is :" + (DateTime.Now - dtBegin).ToString() + " Total Node Num is :" + intAllAddress.ToString() + " Total Valid Node Num is " + intAllValidNode.ToString(), true);
             Console.ReadLine();
+            //Thread.Sleep(5000);
+        }
+        private static Boolean CheckTD(Thread[] tdClass)
+        {
+            Boolean boolResult = true;
+            if(tdClass.Count() > 0)
+            {
+                foreach(Thread tdIn in tdClass)
+                {
+                    if(tdIn.ThreadState != ThreadState.Stopped)
+                    {
+                        boolResult = false;
+                        break;
+                    }
+                    else
+                    {
+                        boolResult = true;
+                    }
+                }
+            }
+            return boolResult;
         }
         private static void ProtectProcess()
         {
-            while (tdBase.ThreadState != ThreadState.Running && tdChild.ThreadState != ThreadState.Running)
+            while (tdBase.ThreadState != ThreadState.Running)
             {
                 ShowProcess(alAllShowAdds);
-                wl("all clear! Total Time is :" + (DateTime.Now - dtBegin).ToString() + " Total Node Num is :" + intAllAddress.ToString() + " Total Valid Node Num is " + intAllValidNode.ToString(), false);
+                wl("all clear! Total Time is :" + (DateTime.Now - dtBegin).ToString() + " Total Node Num is :" + intAllAddress.ToString() + " Total Valid Node Num is " + intAllValidNode.ToString(), true);
                 Console.ReadLine();
+                //Thread.Sleep(5000);
                 break;
             }
         }
-        private static void MainProcess(string strOriAdd, int intIndex = 0, Boolean boolFirstRun = false, Boolean boolChildThreadFlag = false, int intDeepth = 3, int intThreadLimit = 5)
+        private static void MainProcess(string strOriAdd, int intIndex = 0, Boolean boolFirstRun = false, Boolean boolChildThreadFlag = false, int intDeepth = 3, int intThreadLimit = 5, Boolean boolTDin = false)
         {
+            if(boolTDin)
+            {
+                intAllThreadNum++;
+            }
             if (boolFirstRun)
             {
                 //wl("Init..", false, ConsoleColor.Yellow, ConsoleColor.Black);
@@ -119,14 +169,38 @@ namespace MonitoredControlSystem
             int intErrNum = 0;
             REBACK:
             string strOri = ch.gethtml(strOriAdd, "utf-8", intErrNum);
-            try
+            if(!boolFirstRun)
             {
-                tdPW = new Thread(() => ProcessWeb(strOriAdd, intDeepth));
-                tdPW.Start();
-            }
-            catch
-            {
-                ProcessWeb(strOriAdd, intDeepth);
+                try
+                {
+                    if (intThreadNum < intThreadLimit)
+                    {
+                        List<Thread> tdPW_p = new List<Thread>();
+                        if (tdPW != null)
+                        {
+                            tdPW_p = tdPW.ToList();
+                        }                      
+                        tdPW_p.Add(new Thread(() => ProcessWeb(strOriAdd, intDeepth, true)));
+                        tdPW = tdPW_p.ToArray();
+                        intThreadNum++;
+                        wl("Create New Thread for PW:" + intThreadNum, false, ConsoleColor.Cyan, ConsoleColor.Black);
+                        tdPW[tdPW.Count() - 1].Start();
+                    }
+                    else
+                    {
+                        ProcessWeb(strOriAdd, intDeepth);
+                    }
+                }
+                catch(Exception ex)
+                {
+                    wrr(ex.Message.ToString());
+                    //if(intThreadNum > 0)
+                    //{
+                    //    intThreadNum--;
+                    //    wl("Destroy Old Thread for PW:" + intThreadNum, false, ConsoleColor.Cyan, ConsoleColor.Black);
+                    //}
+                    ProcessWeb(strOriAdd, intDeepth);
+                }
             }
             if (strOri.Substring(0, 2) != "-1" && strOri.Substring(0, 2) != "-2")
             {
@@ -197,7 +271,7 @@ namespace MonitoredControlSystem
                                 {
                                     if (intIndex <= intDeepth)
                                     {
-                                        wl_Thread("Add New Node:" + strNextWebAdd + "||Deepth is " + intIndex.ToString(), false, ConsoleColor.Yellow, ConsoleColor.Black);
+                                        wl_Thread("Add New Node:" + strNextWebAdd + "||Deepth is " + intIndex.ToString(), true, ConsoleColor.Yellow, ConsoleColor.Black);
                                         alAllShowAdds.Add(strNextWebAdd);
                                         //MainProcess(strNextWebAdd, intIndex, false);
                                         if (intThreadNum >= intThreadLimit)
@@ -210,17 +284,31 @@ namespace MonitoredControlSystem
                                         {
                                             try
                                             {
-                                                tdChild = new Thread(() => MainProcess(strNextWebAdd, intIndex, false, false, intDeepth, intThreadLimit));
+                                                //tdPW = new Thread[intTDMax];
+                                                List<Thread> tdChild_p = new List<Thread>();
+                                                if(tdChild != null)
+                                                {
+                                                    tdChild_p = tdChild.ToList();
+                                                }
+                                                tdChild_p.Add(new Thread(() => MainProcess(strNextWebAdd, intIndex, false, false, intDeepth, intThreadLimit, true)));
+                                                tdChild = tdChild_p.ToArray();
+                                                //tdChild[intTDMax - 1] = new Thread(() => MainProcess(strNextWebAdd, intIndex, false, false, intDeepth, intThreadLimit, true));
                                                 intThreadNum++;
-                                                wl("Create New Thread:" + intThreadNum, false, ConsoleColor.Yellow, ConsoleColor.Black);
-                                                tdChild.Start();
+                                                wl("Create New Thread for Main:" + intThreadNum, false, ConsoleColor.Cyan, ConsoleColor.Black);
+                                                tdChild[tdChild.Count() - 1].Start();
                                                 //tdChild.Join();
                                                 //Thread.Sleep(500);
                                             }
-                                            catch
+                                            catch(Exception ex)
                                             {
-                                                intThreadNum--;
-                                                wl("Destroy Old Thread:" + intThreadNum, false, ConsoleColor.Yellow, ConsoleColor.Black);
+                                                wrr(ex.Message.ToString());
+                                                //if (intThreadNum > 0)
+                                                //{
+                                                //    intThreadNum--;
+                                                //    wl("Destroy Old Thread for Main:" + intThreadNum, false, ConsoleColor.Cyan, ConsoleColor.Black);
+                                                //}
+                                                //intThreadNum--;
+                                                //wl("Destroy Old Thread for Main:" + intThreadNum, false, ConsoleColor.Cyan, ConsoleColor.Black);
                                             }
                                         }
                                     }
@@ -249,7 +337,11 @@ namespace MonitoredControlSystem
             if (boolChildThreadFlag)
             {
                 intThreadNum--;
-                wl("Destroy Old Thread:" + intThreadNum, false, ConsoleColor.Yellow, ConsoleColor.Black);
+                wl("Destroy Old Thread for Main:" + intThreadNum, false, ConsoleColor.Cyan, ConsoleColor.Black);
+            }
+            if(boolTDin)
+            {
+                intAllThreadNum--;
             }
         }
         private static void ShowProcess(ArrayList alAdds)
@@ -290,8 +382,12 @@ namespace MonitoredControlSystem
             }
             return boolResult;
         }
-        private static void ProcessWeb(string strWebAdd, int intIndex)
+        private static void ProcessWeb(string strWebAdd, int intIndex, Boolean boolTDin = false)
         {
+            if(boolTDin)
+            {
+                intAllThreadNum++;
+            }
             CollectionHelper.CollectionHelper ch = new CollectionHelper.CollectionHelper();
             string strHtml = ch.gethtml(strWebAdd);
             if(alKeyWords != null && alKeyWords.Count > 0)
@@ -304,7 +400,8 @@ namespace MonitoredControlSystem
                         alShowAdds.Add(strWebAdd);
                         alCheckAdds.Add(strWebAdd);
                         intAllValidNode++;
-                        wl(strWebAdd + "||Deepth :" + intIndex.ToString() + " First Position : " + intKeyNum.ToString(), false);
+                        wl(strWebAdd + "||Deepth :" + intIndex.ToString() + " First Position : " + intKeyNum.ToString(), true);
+                        ProcessDB(strWebAdd, strKW.ToString(), intIndex, intKeyNum, 0);
                     }
                     else
                     {
@@ -313,6 +410,23 @@ namespace MonitoredControlSystem
                     }
                 }
             }
+            if(boolTDin)
+            {
+                intAllThreadNum--;
+                intThreadNum--;
+                wl("Destroy Old Thread for PW:" + intThreadNum, false, ConsoleColor.Cyan, ConsoleColor.Black);
+            }
+        }
+        private static void ProcessDB( string strAddress, string strKeyWord, int intDeepth, int intFirstPosition, int intAddNo = 0)
+        {
+            string strDT = DateTime.Now.ToString();
+            string strSQL = "insert into MonitorResults(AddNo,Address,KeyWord,Deepth,FirstPosition,Datetime) ";
+            strSQL = strSQL + " values(" + intAddNo + ",'" + strAddress + "','" + strKeyWord + "'," + intDeepth + "," + intFirstPosition + ",'" + strDT + "'); ";
+            int intInSql = MySqlHelper.MySqlHelper.ExecuteSql(strSQL, MySqlHelper.MySqlHelper.GenLinkString);
+        }
+        private static void ShowTD(object source, ElapsedEventArgs e)
+        {
+            wl("Current Thread Num :" + intAllThreadNum.ToString(), false, ConsoleColor.Magenta, ConsoleColor.Black);
         }
     }
 }

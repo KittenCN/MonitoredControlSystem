@@ -9,7 +9,6 @@ using System.Data;
 using System.Configuration;
 using System.Threading;
 using System.Web;
-using System.Threading;
 using static ConsoleHelper.ConsoleHelper;
 
 namespace CollectionHelper
@@ -34,7 +33,7 @@ namespace CollectionHelper
             {
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
                 //声明一个HttpWebRequest请求   
-                request.Timeout = 30000;
+                request.Timeout = 15000;
                 //设置连接超时时间   
                 request.Headers.Set("Pragma", "no-cache");
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
